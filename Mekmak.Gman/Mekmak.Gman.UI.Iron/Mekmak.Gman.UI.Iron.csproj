@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Google.Apis.Gmail.v1" Version="1.40.1.1613" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Mekmak.Gman.Cobalt\Mekmak.Gman.Cobalt.csproj" />
+    <ProjectReference Include="..\Mekmak.Gman.Diamond\Mekmak.Gman.Diamond.csproj" />
+    <ProjectReference Include="..\Mekmak.Gman.Silk.Interfaces\Mekmak.Gman.Silk.Interfaces.csproj" />
+  </ItemGroup>
+
+</Project>

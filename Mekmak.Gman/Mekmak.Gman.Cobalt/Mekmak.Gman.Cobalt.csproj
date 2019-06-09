@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Google.Apis.Gmail.v1" Version="1.40.1.1613" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Mekmak.Gman.Ore\Mekmak.Gman.Ore.csproj" />
+    <ProjectReference Include="..\Mekmak.Gman.Silk.Interfaces\Mekmak.Gman.Silk.Interfaces.csproj" />
+  </ItemGroup>
+
+</Project>
