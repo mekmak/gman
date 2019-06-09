@@ -1,4 +1,4 @@
-# gman
+# Gmail Manager
 
 Console tool to download my gmail messages with specific labels. 
 
