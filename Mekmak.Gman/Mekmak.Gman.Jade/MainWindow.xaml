@@ -1,0 +1,44 @@
+﻿<Window x:Class="Mekmak.Gman.Jade.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Mekmak.Gman.Jade"
+        mc:Ignorable="d"
+        DataContext="local:MainViewModel"
+        Title="MainWindow" Height="450" Width="800">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal">
+            <Label Content="Directory: "/>
+            <TextBox Text="{Binding EmailDirectory}" Width="600" />
+            <Button Content="Load" Command="{Binding LoadCommand}"/>
+        </StackPanel>
+        <DataGrid Grid.Row="1" Grid.Column="0" ItemsSource="{Binding Emails}" SelectedItem="{Binding SelectedEmail}" AutoGenerateColumns="False">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Id" Binding="{Binding Id}"/>
+            </DataGrid.Columns>
+        </DataGrid>
+        <Grid Grid.Row="1" Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <StackPanel>
+
+            </StackPanel>
+            <Image Grid.Row="1" Stretch="Fill" Source="{Binding ImageUri}"/>
+        </Grid>
+        <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2">
+            <Label Content="{Binding UserMessage}"/>
+        </StackPanel>
+    </Grid>
+</Window>

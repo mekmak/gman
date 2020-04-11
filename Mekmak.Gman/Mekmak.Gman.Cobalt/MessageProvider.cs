@@ -138,6 +138,11 @@ namespace Mekmak.Gman.Cobalt
                 yield return data;
             }
 
+            if (part.Parts == null)
+            {
+                yield break;
+            }
+
             foreach (string data in part.Parts.SelectMany(GetBody))
             {
                 yield return data;

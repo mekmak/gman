@@ -20,7 +20,7 @@ namespace Mekmak.Gman.UI.Iron
             string credentialsPath = args[0];
             string tokenDir = args[1];
 
-            if (string.IsNullOrWhiteSpace(credentialsPath) || string.IsNullOrWhiteSpace(tokenDir))
+            if (!File.Exists(credentialsPath) || !Directory.Exists(tokenDir))
             {
                 throw new ArgumentException("Must pass in credentials file location and token directory");
             }
@@ -122,7 +122,7 @@ namespace Mekmak.Gman.UI.Iron
                 return;
             }
 
-            foreach (var message in messages)
+            foreach (var message in messages.OrderBy(m => m.Id))
             {
                 ConsoleWriter.WriteInGreen($"{message.Id}\t{message.Date}\t{message.Subject}");
             }
