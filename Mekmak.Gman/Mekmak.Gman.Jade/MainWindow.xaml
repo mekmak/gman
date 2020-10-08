@@ -9,8 +9,8 @@
         Title="MainWindow" Height="450" Width="800">
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="1*"/>
+            <ColumnDefinition Width="5*"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -21,21 +21,53 @@
             <Label Content="Directory: "/>
             <TextBox Text="{Binding EmailDirectory}" Width="600" />
             <Button Content="Load" Command="{Binding LoadCommand}"/>
+            <Button Content="Export" Command="{Binding ExportCommand}"/>
         </StackPanel>
         <DataGrid Grid.Row="1" Grid.Column="0" ItemsSource="{Binding Emails}" SelectedItem="{Binding SelectedEmail}" AutoGenerateColumns="False">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Id" Binding="{Binding Id}"/>
+                <DataGridCheckBoxColumn Header="" Binding="{Binding IsTagged}" IsReadOnly="True"/>
+                <DataGridTextColumn Width="70" Header="Subject" Binding="{Binding Subject}"  IsReadOnly="True"/>
+                <DataGridTextColumn Width="75" Header="Date" Binding="{Binding DisplayDate}"  IsReadOnly="True"/>
+                <DataGridTextColumn Width="80" Header="Category" Binding="{Binding Category}"  IsReadOnly="True"/>
+                <DataGridTextColumn Header="Amount" Binding="{Binding AmountDisplay}"  IsReadOnly="True"/>
+                <DataGridTextColumn Width="100" Header="Gig" Binding="{Binding Gig}"  IsReadOnly="True"/>
             </DataGrid.Columns>
         </DataGrid>
         <Grid Grid.Row="1" Grid.Column="1">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
-            <StackPanel>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            
+            <TextBox Grid.Column="0" Grid.Row="0" IsReadOnly="True" 
+                     HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible" 
+                     DataContext="{Binding Path=SelectedEmail}" Text="{Binding Body}"/>
 
+            <Image Grid.Column="1" Grid.Row="0" MouseRightButtonUp="EmailImage_OnMouseRightButtonUp" DataContext="{Binding Path=SelectedEmail}" Source="{Binding Uri}" RenderTransformOrigin=".5,.5">
+                <Image.RenderTransform>
+                    <RotateTransform Angle="{Binding ImageRotateAngle}" />
+                </Image.RenderTransform>
+            </Image>
+
+            <StackPanel Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="1" Orientation="Horizontal">
+                <StackPanel Orientation="Horizontal">
+                    <Label Content="Category: "/>
+                    <TextBox DataContext="{Binding Path=SelectedEmail}" Text="{Binding Category}" MinWidth="100"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Label Content="Amount: "/>
+                    <TextBox DataContext="{Binding Path=SelectedEmail}" Text="{Binding Amount}" MinWidth="100"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Label Content="Gig: "/>
+                    <TextBox DataContext="{Binding Path=SelectedEmail}" Text="{Binding Gig}" MinWidth="100"/>
+                </StackPanel>
+                <Button Content="Next" Command="{Binding NextEmailCommand}"/>
             </StackPanel>
-            <Image Grid.Row="1" Stretch="Fill" Source="{Binding ImageUri}"/>
         </Grid>
         <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2">
             <Label Content="{Binding UserMessage}"/>

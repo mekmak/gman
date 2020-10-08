@@ -4,6 +4,8 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using Mekmak.Gman.Jade.Models;
+using Mekmak.Gman.Ore;
+using Exception = System.Exception;
 
 namespace Mekmak.Gman.Jade
 {
@@ -13,9 +15,40 @@ namespace Mekmak.Gman.Jade
         {
             Emails = new ObservableCollection<EmailModel>();
             LoadCommand = new Command(Load);
+            RotateImageCommand = new Command(RotateImage);
+            ExportCommand = new Command(Export);
+            NextEmailCommand = new Command(NextEmail);
         }
 
         #region Commands
+
+        private Command _nextEmailCommand;
+        public Command NextEmailCommand
+        {
+            get => _nextEmailCommand;
+            set
+            {
+                if (_nextEmailCommand != value)
+                {
+                    _nextEmailCommand = value;
+                    OnPropertyChanged(nameof(NextEmailCommand));
+                }
+            }
+        }
+
+        private Command _rotateImageCommand;
+        public Command RotateImageCommand
+        {
+            get => _rotateImageCommand;
+            set
+            {
+                if (_rotateImageCommand != value)
+                {
+                    _rotateImageCommand = value;
+                    OnPropertyChanged(nameof(RotateImageCommand));
+                }
+            }
+        }
 
         private Command _loadCommand;
         public Command LoadCommand
@@ -27,6 +60,20 @@ namespace Mekmak.Gman.Jade
                 {
                     _loadCommand = value;
                     OnPropertyChanged(nameof(LoadCommand));
+                }
+            }
+        }
+
+        private Command _exportCommand;
+        public Command ExportCommand
+        {
+            get => _exportCommand;
+            set
+            {
+                if (_exportCommand != value)
+                {
+                    _exportCommand = value;
+                    OnPropertyChanged(nameof(ExportCommand));
                 }
             }
         }
@@ -71,27 +118,12 @@ namespace Mekmak.Gman.Jade
             {
                 if (_selectedEmail != value)
                 {
+                    SaveEmailData(_selectedEmail);
                     _selectedEmail = value;
                     OnPropertyChanged(nameof(SelectedEmail));
-                    ImageUri = _selectedEmail.ImageUri;
                 }
             }
         }
-
-        private string _imageUri;
-        public string ImageUri
-        {
-            get => _imageUri;
-            set
-            {
-                if (_imageUri != value)
-                {
-                    _imageUri = value;
-                    OnPropertyChanged(nameof(ImageUri));
-                }
-            }
-        }
-
 
         private string _userMessage;
         public string UserMessage
@@ -105,33 +137,124 @@ namespace Mekmak.Gman.Jade
                     OnPropertyChanged(nameof(UserMessage));
                 }
             }
-
         }
 
         #endregion
+
+        private const string DataFileName = "data.json";
+        private void SaveEmailData(EmailModel model)
+        {
+            if(model == null)
+            {
+                return;
+            }
+
+            try
+            {
+                var dataFilePath = Path.Combine(model.DirectoryPath, DataFileName);
+                var data = model.ToEmail().Serialize();
+                File.WriteAllText(dataFilePath, data);
+            }
+            catch (Exception ex)
+            {
+                ReportToUser($"Could not save email '{model.Id}': {ex.Message}");
+            }
+            
+        }
+
+        private void NextEmail()
+        {
+            if (_emails == null || _emails.Count == 0)
+            {
+                return;
+            }
+
+            if(SelectedEmail == null)
+            {
+                SelectedEmail = _emails.First();
+                return;
+            }
+
+            int index = _emails.IndexOf(SelectedEmail);
+            if (index < 0)
+            {
+                return;
+            }
+
+            if (index == _emails.Count - 1)
+            {
+                SelectedEmail = _emails.First();
+                return;
+            }
+
+            SelectedEmail = _emails[index + 1];
+        }
+
+        private const string ExportDir = "Exports";
+        private void Export()
+        {
+            if (_emails == null || _emailDirectory == null)
+            {
+                ReportToUser("Could not export - no emails loaded");
+                return;
+            }
+
+            var taggedEmails = _emails.Where(e => e.IsTagged).ToList();
+            if (taggedEmails.Count == 0)
+            {
+                ReportToUser("Could not export - no tagged emails found");
+                return;
+            }
+
+            try
+            {
+                var csvLines = taggedEmails.Select(e => $"{e.Category},{e.Amount},{e.Date},{e.Source},{e.Gig}").ToList();
+                csvLines.Insert(0, "Category,Amount,Date,Source,Gig");
+                var exportDir = Path.Combine(_emailDirectory, ExportDir);
+                Directory.CreateDirectory(exportDir);
+                var tempFileName = Path.Combine(exportDir, $"{DateTime.Now:yyyy_MMMM_dd}_{Path.GetRandomFileName()}.txt");
+                File.WriteAllLines(tempFileName, csvLines);
+                ReportToUser($"Exported to: {tempFileName}");
+            }
+            catch(Exception ex)
+            {
+                ReportToUser($"Error exporting: {ex.Message}");
+            }
+        }
 
         private void Load()
         {
             if (string.IsNullOrWhiteSpace(_emailDirectory))
             {
+                ReportToUser("Could not load - please set directory path");
                 return;
             }
 
             if (!Directory.Exists(_emailDirectory))
             {
-                ReportToUser("Cannot find directory");
+                ReportToUser("Could not load - cannot find given directory");
                 return;
             }
 
+
+            int dataReadProblemCount = 0;
+            int dataReadSuccessCount = 0;
 
             var emails = new List<EmailModel>();
             var directoryInfo = new DirectoryInfo(_emailDirectory);
             DirectoryInfo[] subDirectories = directoryInfo.GetDirectories();
             foreach (DirectoryInfo subDirectory in subDirectories)
             {
-                var email = new EmailModel
+                // Skipping the Exports directory
+                if (ExportDir.Equals(subDirectory.Name))
                 {
-                    Id = subDirectory.Name
+                    continue;
+                }
+
+                var emailModel = new EmailModel
+                {
+                    Id = subDirectory.Name,
+                    DirectoryPath = subDirectory.FullName
                 };
 
                 FileInfo bodyFile = subDirectory.GetFiles("*.txt").FirstOrDefault();
@@ -140,25 +263,77 @@ namespace Mekmak.Gman.Jade
                     try
                     {
                         string body = File.ReadAllText(bodyFile.FullName);
-                        email.Body = body;
+                        emailModel.Body = body;
+                        emailModel.Subject = GetSubject(body) ?? "Unknown";
+                        emailModel.Date = GetDate(body);
                     }
                     catch (Exception e)
                     {
-                        email.Body = $"Error reading file: {e.Message}";
+                        emailModel.Body = $"Error reading file: {e.Message}";
                     }
                 }
 
-                FileInfo imageFile = subDirectory.GetFiles().FirstOrDefault(f => !f.Name.EndsWith(".txt"));
+                FileInfo imageFile = subDirectory.GetFiles().FirstOrDefault(f => !f.Name.EndsWith(".txt") && !f.Name.EndsWith(".json"));
                 if (imageFile != null)
                 {
-                    email.ImageUri = imageFile.FullName;
+                    emailModel.Uri = imageFile.FullName;
                 }
 
-                emails.Add(email);
+                FileInfo dataFile = subDirectory.GetFiles(DataFileName).FirstOrDefault();
+                if (dataFile != null)
+                {
+                    try
+                    {
+                        string data = File.ReadAllText(dataFile.FullName);
+                        Email email = Email.Deserialize(data);
+                        emailModel.OverwriteWith(email);
+                        dataReadSuccessCount++;
+                    }
+                    catch
+                    {
+                        // ignored
+                        dataReadProblemCount++;
+                    }
+                }
+
+                emails.Add(emailModel);
             }
 
             Emails = new ObservableCollection<EmailModel>(emails);
             SelectedEmail = Emails.FirstOrDefault();
+            ReportToUser($"Loaded {Emails.Count} email(s) - {dataReadSuccessCount} data file(s) processed, {dataReadProblemCount} had issues");
+        }
+
+        private string GetSubject(string emailBody)
+        {
+            string[] lines = emailBody.Split(Environment.NewLine);
+            return lines.Length < 3 ? null : lines[2].Trim();
+        }
+
+        private DateTime? GetDate(string emailBody)
+        {
+            string[] lines = emailBody.Split(Environment.NewLine);
+            if (lines.Length == 0)
+            {
+                return null;
+            }
+
+            string dateLine = lines[0];
+            return DateTime.TryParse(dateLine, out DateTime date) ? (DateTime?)date : null;
+        }
+
+        private void RotateImage()
+        {
+            if (SelectedEmail == null)
+            {
+                return;
+            }
+
+            SelectedEmail.ImageRotateAngle += 90;
+            if (SelectedEmail.ImageRotateAngle >= 360)
+            {
+                SelectedEmail.ImageRotateAngle = 0;
+            }
         }
 
         private void ReportToUser(string message)

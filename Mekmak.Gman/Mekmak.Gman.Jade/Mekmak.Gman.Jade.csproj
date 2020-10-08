@@ -6,4 +6,8 @@
     <UseWPF>true</UseWPF>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Mekmak.Gman.Ore\Mekmak.Gman.Ore.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -20,11 +20,18 @@ namespace Mekmak.Gman.Jade
     /// </summary>
     public partial class MainWindow : Window
     {
+        private MainViewModel ViewModel => (MainViewModel) DataContext;
+
         public MainWindow()
         {
             InitializeComponent();
 
             DataContext = new MainViewModel();
+        }
+
+        private void EmailImage_OnMouseRightButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            ViewModel.RotateImageCommand.Execute(null);
         }
     }
 }
