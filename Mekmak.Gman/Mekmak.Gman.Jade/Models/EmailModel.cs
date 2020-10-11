@@ -5,6 +5,8 @@ namespace Mekmak.Gman.Jade.Models
 {
     public class EmailModel : ObservableModel
     {
+        public int RowNum { get; set; }
+
         private string _id;
         public string Id
         {
@@ -62,6 +64,7 @@ namespace Mekmak.Gman.Jade.Models
                 if (_receiptDate != value)
                 {
                     _receiptDate = value;
+                    UpdateReceiptDateParts();
                     OnPropertyChanged(nameof(ReceiptDate));
                     OnPropertyChanged(nameof(ReceiptDisplayDate));
                     OnPropertyChanged(nameof(ReceiptDateDay));
@@ -71,34 +74,72 @@ namespace Mekmak.Gman.Jade.Models
             }
         }
 
-        public int ReceiptDateDay
+        private int? _receiptDateDay;
+        public int? ReceiptDateDay
         {
-            get => _receiptDate?.Day ?? 0;
+            get => _receiptDateDay;
             set
             {
-                var oldDate = _receiptDate ?? new DateTime();
-                ReceiptDate = new DateTime(oldDate.Year, oldDate.Month, value);
+                if(_receiptDateDay != value)
+                {
+                    _receiptDateDay = value;
+                    UpdateReceiptDate();
+                }
             }
         }
 
-        public int ReceiptDateMonth
+        private int? _receiptDateMonth;
+        public int? ReceiptDateMonth
         {
-            get => _receiptDate?.Month ?? 0;
+            get => _receiptDateMonth;
             set
             {
-                var oldDate = _receiptDate ?? new DateTime();
-                ReceiptDate = new DateTime(oldDate.Year, value, oldDate.Day);
+                if (_receiptDateMonth != value)
+                {
+                    _receiptDateMonth = value;
+                    UpdateReceiptDate();
+                }
             }
         }
 
-        public int ReceiptDateYear
+        private int? _receiptDateYear;
+        public int? ReceiptDateYear
         {
-            get => _receiptDate?.Year ?? 0;
+            get => _receiptDateYear;
             set
             {
-                var oldDate = _receiptDate ?? new DateTime();
-                ReceiptDate = new DateTime(value, oldDate.Month, oldDate.Day);
+                if(_receiptDateYear != value)
+                {
+                    _receiptDateYear = value;
+                    UpdateReceiptDate();
+                }
             }
+        }
+
+        private void UpdateReceiptDateParts()
+        {
+            if (_receiptDate.HasValue)
+            {
+                _receiptDateDay = _receiptDate.Value.Day;
+                _receiptDateMonth = _receiptDate.Value.Month;
+                _receiptDateYear = _receiptDate.Value.Year;
+            }
+            else
+            {
+                _receiptDateDay = null;
+                _receiptDateMonth = null;
+                _receiptDateYear = null;
+            }
+        }
+
+        private void UpdateReceiptDate()
+        {
+            if (!(_receiptDateYear.HasValue && _receiptDateMonth.HasValue && _receiptDateDay.HasValue))
+            {
+                return;
+            }
+
+            ReceiptDate = new DateTime(_receiptDateYear.Value, _receiptDateMonth.Value, _receiptDateDay.Value);
         }
 
         public string ReceiptDisplayDate => ReceiptDate == null ? "" : $"{ReceiptDate:d}";
@@ -169,8 +210,8 @@ namespace Mekmak.Gman.Jade.Models
             }
         }
 
-        private decimal _amount;
-        public decimal Amount
+        private decimal? _amount;
+        public decimal? Amount
         {
             get => _amount;
             set
@@ -186,7 +227,7 @@ namespace Mekmak.Gman.Jade.Models
             }
         }
 
-        public string AmountDisplay => $"{Amount:C}";
+        public string AmountDisplay => Amount.HasValue ? $"{Amount:C}" : $"{0:C}";
 
         private string _gig;
         public string Gig
@@ -211,10 +252,7 @@ namespace Mekmak.Gman.Jade.Models
             Body = email.Body;
             Category = email.Category;
             ReceiptDate = email.ReceiptDate;
-            if (email.EmailDate.HasValue)
-            {
-                EmailDate = email.EmailDate;
-            }
+            EmailDate = email.EmailDate ?? EmailDate;
             Gig = email.Gig;
             Subject = email.Subject;
             ImageRotateAngle = email.ImageRotateAngle;

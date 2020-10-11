@@ -154,6 +154,7 @@ namespace Mekmak.Gman.Jade
                 var dataFilePath = Path.Combine(model.DirectoryPath, DataFileName);
                 var data = model.ToEmail().Serialize();
                 File.WriteAllText(dataFilePath, data);
+                ReportToUser($"Saved email '{model.Subject}' ({model.Id})");
             }
             catch (Exception ex)
             {
@@ -243,6 +244,8 @@ namespace Mekmak.Gman.Jade
             var emails = new List<EmailModel>();
             var directoryInfo = new DirectoryInfo(_emailDirectory);
             DirectoryInfo[] subDirectories = directoryInfo.GetDirectories();
+
+            int rowNum = 1;
             foreach (DirectoryInfo subDirectory in subDirectories)
             {
                 // Skipping the Exports directory
@@ -254,6 +257,7 @@ namespace Mekmak.Gman.Jade
                 var emailModel = new EmailModel
                 {
                     Id = subDirectory.Name,
+                    RowNum = rowNum++,
                     DirectoryPath = subDirectory.FullName
                 };
 

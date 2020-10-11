@@ -9,6 +9,23 @@
     <Window.InputBindings>
         <KeyBinding Command="{Binding RotateImageCommand}" Gesture="CTRL+R" />
     </Window.InputBindings>
+    <Window.Resources>
+        <ResourceDictionary>
+            <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource {x:Type TextBox}}">
+                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                <Setter Property="Margin" Value="3"/>
+            </Style>
+            <Style TargetType="{x:Type Label}" BasedOn="{StaticResource {x:Type Label}}">
+                <Setter Property="Margin" Value="3"/>
+            </Style>
+            <Style TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Type Button}}">
+                <Setter Property="Margin" Value="3"/>
+            </Style>
+            <Style TargetType="{x:Type DataGrid}" BasedOn="{StaticResource {x:Type DataGrid}}">
+                <Setter Property="Margin" Value="3"/>
+            </Style>
+        </ResourceDictionary>
+    </Window.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="1*"/>
@@ -21,13 +38,14 @@
         </Grid.RowDefinitions>
         <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" KeyboardNavigation.TabNavigation="None">
             <Label Content="Directory: "/>
-            <TextBox Text="{Binding EmailDirectory}" Width="600" />
+            <TextBox VerticalContentAlignment="Center" Text="{Binding EmailDirectory}" Width="600" />
             <Button Content="Load" Command="{Binding LoadCommand}"/>
             <Button Content="Export" Command="{Binding ExportCommand}"/>
         </StackPanel>
         <DataGrid Grid.Row="1" Grid.Column="0" ItemsSource="{Binding Emails}" SelectedItem="{Binding SelectedEmail}" AutoGenerateColumns="False" KeyboardNavigation.TabNavigation="None">
             <DataGrid.Columns>
                 <DataGridCheckBoxColumn Header="" Binding="{Binding IsTagged}" IsReadOnly="True"/>
+                <DataGridTextColumn Header="" Binding="{Binding RowNum}"  IsReadOnly="True"/>
                 <DataGridTextColumn Width="70" Header="Subject" Binding="{Binding Subject}"  IsReadOnly="True"/>
                 <DataGridTextColumn Width="80" Header="Receipt Date" Binding="{Binding ReceiptDisplayDate}"  IsReadOnly="True"/>
                 <DataGridTextColumn Width="80" Header="Email Date" Binding="{Binding EmailDisplayDate}"  IsReadOnly="True"/>
@@ -47,7 +65,7 @@
             </Grid.ColumnDefinitions>
 
             <Grid Grid.Column="0" Grid.Row="0" KeyboardNavigation.TabNavigation="None">
-                <TextBox IsReadOnly="True" 
+                <TextBox IsReadOnly="True" VerticalContentAlignment="Top"
                          HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible" 
                          DataContext="{Binding Path=SelectedEmail}" Text="{Binding Body}"/>
             </Grid>

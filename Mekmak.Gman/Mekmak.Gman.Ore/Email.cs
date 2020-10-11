@@ -25,7 +25,7 @@ namespace Mekmak.Gman.Ore
         public string Category { get; set; }
 
         [JsonProperty("amount")]
-        public decimal Amount { get; set; }
+        public decimal? Amount { get; set; }
 
         [JsonProperty("gig")]
         public string Gig { get; set; }
