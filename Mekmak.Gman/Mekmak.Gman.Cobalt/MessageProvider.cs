@@ -2,12 +2,14 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Mail;
 using System.Text;
 using System.Threading.Tasks;
 using Google.Apis.Gmail.v1;
 using Google.Apis.Gmail.v1.Data;
 using Mekmak.Gman.Ore;
 using Mekmak.Gman.Silk.Interfaces;
+using Attachment = Mekmak.Gman.Ore.Attachment;
 using Message = Mekmak.Gman.Ore.Message;
 
 namespace Mekmak.Gman.Cobalt
@@ -24,6 +26,8 @@ namespace Mekmak.Gman.Cobalt
             _log = log ?? throw new ArgumentNullException(nameof(log));
             _service = service ?? throw new ArgumentNullException(nameof(service));
         }
+
+        #region Get
 
         public List<Message> GetMessagesWithLabel(string traceId, params string[] labelIds)
         {
@@ -149,6 +153,48 @@ namespace Mekmak.Gman.Cobalt
             }
         }
 
+        #endregion
+
+        #region Send
+
+        public string SendMessage(string subject, string body, string imgPath)
+        {
+            var mail = new MailMessage
+            {
+                Subject = subject,
+                Body = body,
+                IsBodyHtml = false
+            };
+
+            mail.To.Add(new MailAddress(GetCurrentEmailAddress()));
+            mail.Attachments.Add(new System.Net.Mail.Attachment(imgPath));
+
+            MimeKit.MimeMessage mimeMessage = MimeKit.MimeMessage.CreateFromMailMessage(mail);
+            var message = new Google.Apis.Gmail.v1.Data.Message
+            {
+                Raw = CompressString(mimeMessage.ToString())
+            };
+
+            Google.Apis.Gmail.v1.Data.Message result = _service.Users.Messages.Send(message, "me").Execute();
+            return result.Id;
+        }
+
+        #endregion
+
+        private string _currentEmailAddress;
+        private string GetCurrentEmailAddress()
+        {
+            if (!string.IsNullOrWhiteSpace(_currentEmailAddress))
+            {
+                return _currentEmailAddress;
+            }
+
+            Profile profile = _service.Users.GetProfile("me").Execute();
+            _currentEmailAddress = profile.EmailAddress;
+
+            return _currentEmailAddress;
+        }
+
         private byte[] DecompressToBytes(string base64String)
         {
             return string.IsNullOrWhiteSpace(base64String) ? new byte[0] : Convert.FromBase64String(SanitizeBase64String(base64String));
@@ -170,6 +216,15 @@ namespace Mekmak.Gman.Cobalt
             {
                 return $"Error decompressing: {ex.Message}" + Environment.NewLine + base64String;
             }
+        }
+
+        private string CompressString(string input)
+        {
+            var inputBytes = Encoding.UTF8.GetBytes(input);
+            return Convert.ToBase64String(inputBytes)
+                .Replace('+', '-')
+                .Replace('/', '_')
+                .Replace("=", "");
         }
 
         private string SanitizeBase64String(string str)

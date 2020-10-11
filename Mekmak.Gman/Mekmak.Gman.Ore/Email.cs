@@ -13,7 +13,10 @@ namespace Mekmak.Gman.Ore
         public string Subject { get; set; }
 
         [JsonProperty("date")]
-        public DateTime? Date { get; set; }
+        public DateTime? ReceiptDate { get; set; }
+
+        [JsonProperty("emailDate")]
+        public DateTime? EmailDate { get; set; }
 
         [JsonProperty("body")]
         public string Body { get; set; }

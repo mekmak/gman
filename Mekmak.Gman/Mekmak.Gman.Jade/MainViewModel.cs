@@ -208,8 +208,8 @@ namespace Mekmak.Gman.Jade
 
             try
             {
-                var csvLines = taggedEmails.Select(e => $"{e.Category},{e.Amount},{e.Date},{e.Source},{e.Gig}").ToList();
-                csvLines.Insert(0, "Category,Amount,Date,Source,Gig");
+                var csvLines = taggedEmails.Select(e => $"{e.Category},{e.AmountDisplay},{e.EmailDisplayDate},{e.ReceiptDisplayDate},{e.Source},{e.Gig}").ToList();
+                csvLines.Insert(0, "Category,Amount,EmailDate,ReceiptDate,Source,Gig");
                 var exportDir = Path.Combine(_emailDirectory, ExportDir);
                 Directory.CreateDirectory(exportDir);
                 var tempFileName = Path.Combine(exportDir, $"{DateTime.Now:yyyy_MMMM_dd}_{Path.GetRandomFileName()}.txt");
@@ -265,7 +265,7 @@ namespace Mekmak.Gman.Jade
                         string body = File.ReadAllText(bodyFile.FullName);
                         emailModel.Body = body;
                         emailModel.Subject = GetSubject(body) ?? "Unknown";
-                        emailModel.Date = GetDate(body);
+                        emailModel.EmailDate = GetDate(body);
                     }
                     catch (Exception e)
                     {

@@ -35,22 +35,73 @@ namespace Mekmak.Gman.Jade.Models
             }
         }
 
-        private DateTime? _date;
-        public DateTime? Date
+        private DateTime? _emailDate;
+
+        public DateTime? EmailDate
         {
-            get => _date;
+            get => _emailDate;
             set
             {
-                if (_date != value)
+                if (_emailDate != value)
                 {
-                    _date = value;
-                    OnPropertyChanged(nameof(Date));
-                    OnPropertyChanged(nameof(DisplayDate));
+                    _emailDate = value;
+                    OnPropertyChanged(nameof(EmailDate));
+                    OnPropertyChanged(nameof(EmailDisplayDate));
                 }
             }
         }
 
-        public string DisplayDate => Date == null ? "" : $"{Date:d}";
+        public string EmailDisplayDate => EmailDate == null ? "" : $"{EmailDate:d}";
+
+        private DateTime? _receiptDate;
+        public DateTime? ReceiptDate
+        {
+            get => _receiptDate;
+            set
+            {
+                if (_receiptDate != value)
+                {
+                    _receiptDate = value;
+                    OnPropertyChanged(nameof(ReceiptDate));
+                    OnPropertyChanged(nameof(ReceiptDisplayDate));
+                    OnPropertyChanged(nameof(ReceiptDateDay));
+                    OnPropertyChanged(nameof(ReceiptDateMonth));
+                    OnPropertyChanged(nameof(ReceiptDateYear));
+                }
+            }
+        }
+
+        public int ReceiptDateDay
+        {
+            get => _receiptDate?.Day ?? 0;
+            set
+            {
+                var oldDate = _receiptDate ?? new DateTime();
+                ReceiptDate = new DateTime(oldDate.Year, oldDate.Month, value);
+            }
+        }
+
+        public int ReceiptDateMonth
+        {
+            get => _receiptDate?.Month ?? 0;
+            set
+            {
+                var oldDate = _receiptDate ?? new DateTime();
+                ReceiptDate = new DateTime(oldDate.Year, value, oldDate.Day);
+            }
+        }
+
+        public int ReceiptDateYear
+        {
+            get => _receiptDate?.Year ?? 0;
+            set
+            {
+                var oldDate = _receiptDate ?? new DateTime();
+                ReceiptDate = new DateTime(value, oldDate.Month, oldDate.Day);
+            }
+        }
+
+        public string ReceiptDisplayDate => ReceiptDate == null ? "" : $"{ReceiptDate:d}";
 
         private string _body;
         public string Body
@@ -94,7 +145,7 @@ namespace Mekmak.Gman.Jade.Models
             }
         }
 
-        public string Source => "Email";
+        public string Source => $"Email ({Id})";
 
         public bool IsTagged
         {
@@ -159,7 +210,11 @@ namespace Mekmak.Gman.Jade.Models
             Amount = email.Amount;
             Body = email.Body;
             Category = email.Category;
-            Date = email.Date;
+            ReceiptDate = email.ReceiptDate;
+            if (email.EmailDate.HasValue)
+            {
+                EmailDate = email.EmailDate;
+            }
             Gig = email.Gig;
             Subject = email.Subject;
             ImageRotateAngle = email.ImageRotateAngle;
@@ -173,7 +228,8 @@ namespace Mekmak.Gman.Jade.Models
                 Amount = Amount,
                 Body = Body,
                 Category = Category,
-                Date = Date,
+                ReceiptDate = ReceiptDate,
+                EmailDate = EmailDate,
                 Gig = Gig,
                 Subject = Subject,
                 ImageRotateAngle = ImageRotateAngle

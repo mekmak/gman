@@ -12,7 +12,7 @@
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="1*"/>
-            <ColumnDefinition Width="5*"/>
+            <ColumnDefinition Width="4*"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -29,7 +29,8 @@
             <DataGrid.Columns>
                 <DataGridCheckBoxColumn Header="" Binding="{Binding IsTagged}" IsReadOnly="True"/>
                 <DataGridTextColumn Width="70" Header="Subject" Binding="{Binding Subject}"  IsReadOnly="True"/>
-                <DataGridTextColumn Width="75" Header="Date" Binding="{Binding DisplayDate}"  IsReadOnly="True"/>
+                <DataGridTextColumn Width="80" Header="Receipt Date" Binding="{Binding ReceiptDisplayDate}"  IsReadOnly="True"/>
+                <DataGridTextColumn Width="80" Header="Email Date" Binding="{Binding EmailDisplayDate}"  IsReadOnly="True"/>
                 <DataGridTextColumn Width="80" Header="Category" Binding="{Binding Category}"  IsReadOnly="True"/>
                 <DataGridTextColumn Header="Amount" Binding="{Binding AmountDisplay}"  IsReadOnly="True"/>
                 <DataGridTextColumn Width="100" Header="Gig" Binding="{Binding Gig}"  IsReadOnly="True"/>
@@ -64,14 +65,26 @@
                     <TextBox DataContext="{Binding Path=SelectedEmail}" Text="{Binding Category}" MinWidth="100" TabIndex="0"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal">
+                    <Label Content="Month: "/>
+                    <TextBox DataContext="{Binding Path=SelectedEmail}" Text="{Binding ReceiptDateMonth}" MinWidth="100" TabIndex="1"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Label Content="Day: "/>
+                    <TextBox DataContext="{Binding Path=SelectedEmail}" Text="{Binding ReceiptDateDay}" MinWidth="100" TabIndex="2"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Label Content="Year: "/>
+                    <TextBox DataContext="{Binding Path=SelectedEmail}" Text="{Binding ReceiptDateYear}" MinWidth="100" TabIndex="3"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
                     <Label Content="Amount: "/>
-                    <TextBox DataContext="{Binding Path=SelectedEmail}" Text="{Binding Amount}" MinWidth="100" TabIndex="1"/>
+                    <TextBox DataContext="{Binding Path=SelectedEmail}" Text="{Binding Amount}" MinWidth="100" TabIndex="4"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal">
                     <Label Content="Gig: "/>
-                    <TextBox DataContext="{Binding Path=SelectedEmail}" Text="{Binding Gig}" MinWidth="100" TabIndex="2"/>
+                    <TextBox DataContext="{Binding Path=SelectedEmail}" Text="{Binding Gig}" MinWidth="100" TabIndex="5"/>
                 </StackPanel>
-                <Button Content="Next" Command="{Binding NextEmailCommand}" TabIndex="3"/>
+                <Button Content="Next" Command="{Binding NextEmailCommand}" TabIndex="6"/>
             </StackPanel>
         </Grid>
         <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2">

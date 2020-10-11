@@ -14,6 +14,7 @@ namespace Mekmak.Gman.UI.Iron
     {
         private static GmailService _service;
         private static ITraceLogger _log;
+        private static MessageProvider _messageProvider;
 
         static void Main(string[] args)
         {
@@ -30,12 +31,18 @@ namespace Mekmak.Gman.UI.Iron
             var factory = new GmailServiceFactory();
             _service = factory.BuildAsync(new GmailServiceConfig
             {
-                ApiScopes = new[] {GmailService.Scope.GmailReadonly},
+                ApiScopes = new[]
+                {
+                    GmailService.Scope.GmailReadonly,
+                    GmailService.Scope.GmailSend
+                },
                 AppName = "Mekmak Gman",
                 CredentialsFilePath = credentialsPath,
                 TokenDirectory = tokenDir
             }).Result;
             
+            _messageProvider = new MessageProvider(_log.GetSubLogger("MessageProvider"), _service);
+
             while (true)
             {
                 Console.Write("> ");
@@ -99,13 +106,109 @@ namespace Mekmak.Gman.UI.Iron
                 case "-dl-with-label":
                     DownloadWithLabel(command.Advance());
                     return;
+                case "-dl":
+                    DownloadWithMessageId(command.Advance());
+                    return;
                 case "-read":
                     ReadMessage(command.Advance());
+                    return;
+                case "-upload":
+                    UploadReceipts(command.Advance());
+                    return;
+                case "-send-test":
+                    SendTestMessage(command.Advance());
                     return;
                 default:
                     ConsoleWriter.WriteInYellow($"Unknown message command '{command}'");
                     return;
             }
+        }
+
+        private static void SendTestMessage(ConsoleCommand command)
+        {
+            string photoPath = command.Current;
+            ConsoleWriter.WriteInGreen($"Sending test message with photo {photoPath}...");
+            string messageId = _messageProvider.SendMessage("Test Message", "Test message sent from gman app", photoPath);
+            ConsoleWriter.WriteInGreen($"Sent message with id {messageId}");
+        }
+
+        private static void UploadReceipts(ConsoleCommand command)
+        {
+            const string sentFileName = "sent.txt";
+
+            string photoDir = command.Current;
+            ConsoleWriter.WriteInGreen($"Reading dir {photoDir}..");
+            var directoryInfo = new DirectoryInfo(photoDir);
+
+
+            FileInfo sentFile = directoryInfo.GetFiles(sentFileName).FirstOrDefault();
+            if (sentFile == null)
+            {
+                string sentFilePath = Path.Combine(directoryInfo.FullName, sentFileName);
+                File.WriteAllText(sentFilePath, "");
+                sentFile = directoryInfo.GetFiles(sentFileName).Single();
+                if(sentFile == null)
+                {
+                    throw new IOException($"Could not open sent file at {sentFilePath}");
+                }
+            }
+
+            var sentIds = new HashSet<string>(File.ReadAllLines(sentFile.FullName).Where(l => !string.IsNullOrWhiteSpace(l)));
+            var ignoredIds = new HashSet<FileInfo>();
+            var imagesToSend = new HashSet<FileInfo>();
+
+            List<FileInfo> photoFiles = directoryInfo.GetFiles().Where(f => !f.Name.EndsWith(".txt")).ToList();
+            foreach (FileInfo photoFile in photoFiles)
+            {
+                if (sentIds.Contains(photoFile.Name))
+                {
+                    ignoredIds.Add(photoFile);
+                }
+                else
+                {
+                    imagesToSend.Add(photoFile);
+                }
+            }
+
+            if (imagesToSend.Count == 0)
+            {
+                ConsoleWriter.WriteInYellow("All photos were already sent - aborting");
+                return;
+            }
+
+            ConsoleWriter.WriteInGreen($"About to send {imagesToSend.Count} emails, {ignoredIds.Count} were already sent - proceed? (y/n)");
+            string input = Console.ReadLine() ?? "n";
+            if (!"y".Equals(input.Trim().ToLowerInvariant()))
+            {
+                ConsoleWriter.WriteInYellow("Aborting");
+                return;
+            }
+
+            foreach (FileInfo toSend in imagesToSend)
+            {
+                try
+                {
+                    ConsoleWriter.WriteInGreen($"Sending {toSend.Name}..");
+                    _messageProvider.SendMessage("TAXES 2020", toSend.Name, toSend.FullName);
+                }
+                catch (Exception ex)
+                {
+                    ConsoleWriter.WriteInRed($"Failed to send message, aborting: {ex.Message}");
+                    return;
+                }
+
+                try
+                {
+                    File.AppendAllLines(sentFile.FullName, new[] {toSend.Name});
+                }
+                catch (Exception ex)
+                {
+                    ConsoleWriter.WriteInRed($"Could not update sent file with {toSend.Name} - aborting: {ex.Message}");
+                    return;
+                }
+            }
+
+            ConsoleWriter.WriteInGreen("Upload completed");
         }
 
         private static void PrintMessages(ConsoleCommand command)
@@ -114,8 +217,7 @@ namespace Mekmak.Gman.UI.Iron
 
             ConsoleWriter.WriteInGreen($"Fetching messages with label {labelId}..");
 
-            var messageProvider = new MessageProvider(_log.GetSubLogger("MessageProvider"), _service);
-            var messages = messageProvider.GetMessagesWithLabel(TraceId.New(), labelId);
+            var messages = _messageProvider.GetMessagesWithLabel(TraceId.New(), labelId);
             if (!messages.Any())
             {
                 ConsoleWriter.WriteInGreen($"No messages found for label {labelId}");
@@ -134,9 +236,20 @@ namespace Mekmak.Gman.UI.Iron
 
             ConsoleWriter.WriteInGreen($"Reading message {messageId}..");
 
-            var messageProvider = new MessageProvider(_log.GetSubLogger("MessageProvider"),_service);
-            Message message = messageProvider.GetMessage(TraceId.New(), messageId);
+            Message message = _messageProvider.GetMessage(TraceId.New(), messageId);
             ConsoleWriter.WriteInGreen(message.Body);
+        }
+
+        private static void DownloadWithMessageId(ConsoleCommand command)
+        {
+            string messageId = command.Current;
+            string dir = command.Advance().Current;
+
+            Directory.CreateDirectory(dir);
+
+            ConsoleWriter.WriteInGreen($"Downloading message {messageId} to {dir}..");
+            Message message = _messageProvider.GetMessage(TraceId.New(), messageId);
+            SaveMessage(message, dir);
         }
 
         private static void DownloadWithLabel(ConsoleCommand command)
@@ -146,9 +259,7 @@ namespace Mekmak.Gman.UI.Iron
             Directory.CreateDirectory(dir);
 
             ConsoleWriter.WriteInGreen($"Downloading messages with label {labelId} to {dir}..");
-            var messageProvider = new MessageProvider(_log.GetSubLogger("MessageProvider"),_service);
-            var messages = messageProvider.GetMessagesWithLabel(TraceId.New(), labelId);
-
+            var messages = _messageProvider.GetMessagesWithLabel(TraceId.New(), labelId);
             if (!messages.Any())
             {
                 ConsoleWriter.WriteInGreen($"No messages found for label {labelId}");
@@ -157,15 +268,20 @@ namespace Mekmak.Gman.UI.Iron
 
             foreach (var message in messages)
             {
-                ConsoleWriter.WriteInGreen($"Saving {message.Id}\t{message.Date}\t{message.Subject}..");
-                string msgDir = Path.Combine(dir, message.Id);
-                Directory.CreateDirectory(msgDir);
+                SaveMessage(message, dir);
+            }
+        }
 
-                File.WriteAllText(Path.Combine(msgDir, "body.txt"), string.Join(Environment.NewLine, message.Date, message.Subject, message.Body));
-                foreach (var attachment in message.Attachments)
-                {
-                    File.WriteAllBytes(Path.Combine(msgDir, attachment.Name), attachment.Data);
-                }
+        private static void SaveMessage(Message message, string dir)
+        {
+            ConsoleWriter.WriteInGreen($"Saving {message.Id}\t{message.Date}\t{message.Subject}..");
+            string msgDir = Path.Combine(dir, message.Id);
+            Directory.CreateDirectory(msgDir);
+
+            File.WriteAllText(Path.Combine(msgDir, "body.txt"), string.Join(Environment.NewLine, message.Date, message.Subject, message.Body));
+            foreach (var attachment in message.Attachments)
+            {
+                File.WriteAllBytes(Path.Combine(msgDir, attachment.Name), attachment.Data);
             }
         }
 
