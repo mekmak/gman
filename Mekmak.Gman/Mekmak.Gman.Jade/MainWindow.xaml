@@ -3,10 +3,12 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:Mekmak.Gman.Jade"
         mc:Ignorable="d"
         DataContext="local:MainViewModel"
         Title="MainWindow" Height="450" Width="800">
+    <Window.InputBindings>
+        <KeyBinding Command="{Binding RotateImageCommand}" Gesture="CTRL+R" />
+    </Window.InputBindings>
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="1*"/>
@@ -17,13 +19,13 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal">
+        <StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" KeyboardNavigation.TabNavigation="None">
             <Label Content="Directory: "/>
             <TextBox Text="{Binding EmailDirectory}" Width="600" />
             <Button Content="Load" Command="{Binding LoadCommand}"/>
             <Button Content="Export" Command="{Binding ExportCommand}"/>
         </StackPanel>
-        <DataGrid Grid.Row="1" Grid.Column="0" ItemsSource="{Binding Emails}" SelectedItem="{Binding SelectedEmail}" AutoGenerateColumns="False">
+        <DataGrid Grid.Row="1" Grid.Column="0" ItemsSource="{Binding Emails}" SelectedItem="{Binding SelectedEmail}" AutoGenerateColumns="False" KeyboardNavigation.TabNavigation="None">
             <DataGrid.Columns>
                 <DataGridCheckBoxColumn Header="" Binding="{Binding IsTagged}" IsReadOnly="True"/>
                 <DataGridTextColumn Width="70" Header="Subject" Binding="{Binding Subject}"  IsReadOnly="True"/>
@@ -33,7 +35,7 @@
                 <DataGridTextColumn Width="100" Header="Gig" Binding="{Binding Gig}"  IsReadOnly="True"/>
             </DataGrid.Columns>
         </DataGrid>
-        <Grid Grid.Row="1" Grid.Column="1">
+        <Grid Grid.Row="1" Grid.Column="1" >
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" />
                 <RowDefinition Height="Auto"/>
@@ -42,12 +44,15 @@
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            
-            <TextBox Grid.Column="0" Grid.Row="0" IsReadOnly="True" 
-                     HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible" 
-                     DataContext="{Binding Path=SelectedEmail}" Text="{Binding Body}"/>
 
-            <Image Grid.Column="1" Grid.Row="0" MouseRightButtonUp="EmailImage_OnMouseRightButtonUp" DataContext="{Binding Path=SelectedEmail}" Source="{Binding Uri}" RenderTransformOrigin=".5,.5">
+            <Grid Grid.Column="0" Grid.Row="0" KeyboardNavigation.TabNavigation="None">
+                <TextBox IsReadOnly="True" 
+                         HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible" 
+                         DataContext="{Binding Path=SelectedEmail}" Text="{Binding Body}"/>
+            </Grid>
+            
+
+            <Image KeyboardNavigation.TabNavigation="None" Grid.Column="1" Grid.Row="0" MouseRightButtonUp="EmailImage_OnMouseRightButtonUp" DataContext="{Binding Path=SelectedEmail}" Source="{Binding Uri}" RenderTransformOrigin=".5,.5">
                 <Image.RenderTransform>
                     <RotateTransform Angle="{Binding ImageRotateAngle}" />
                 </Image.RenderTransform>
@@ -56,17 +61,17 @@
             <StackPanel Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="1" Orientation="Horizontal">
                 <StackPanel Orientation="Horizontal">
                     <Label Content="Category: "/>
-                    <TextBox DataContext="{Binding Path=SelectedEmail}" Text="{Binding Category}" MinWidth="100"/>
+                    <TextBox DataContext="{Binding Path=SelectedEmail}" Text="{Binding Category}" MinWidth="100" TabIndex="0"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal">
                     <Label Content="Amount: "/>
-                    <TextBox DataContext="{Binding Path=SelectedEmail}" Text="{Binding Amount}" MinWidth="100"/>
+                    <TextBox DataContext="{Binding Path=SelectedEmail}" Text="{Binding Amount}" MinWidth="100" TabIndex="1"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal">
                     <Label Content="Gig: "/>
-                    <TextBox DataContext="{Binding Path=SelectedEmail}" Text="{Binding Gig}" MinWidth="100"/>
+                    <TextBox DataContext="{Binding Path=SelectedEmail}" Text="{Binding Gig}" MinWidth="100" TabIndex="2"/>
                 </StackPanel>
-                <Button Content="Next" Command="{Binding NextEmailCommand}"/>
+                <Button Content="Next" Command="{Binding NextEmailCommand}" TabIndex="3"/>
             </StackPanel>
         </Grid>
         <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2">
