@@ -189,7 +189,7 @@ namespace Mekmak.Gman.UI.Iron
                 try
                 {
                     ConsoleWriter.WriteInGreen($"Sending {toSend.Name}..");
-                    _messageProvider.SendMessage("TAXES AUTO 2020", toSend.Name, toSend.FullName);
+                    _messageProvider.SendMessage("TAXES AUTO 2019", toSend.Name, toSend.FullName);
                 }
                 catch (Exception ex)
                 {
