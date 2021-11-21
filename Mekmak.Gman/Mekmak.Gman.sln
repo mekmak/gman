@@ -13,7 +13,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mekmak.Gman.Ore", "Mekmak.G
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mekmak.Gman.Silk.Interfaces", "Mekmak.Gman.Silk.Interfaces\Mekmak.Gman.Silk.Interfaces.csproj", "{FCECFDEA-7B57-4CF9-AB1C-5754BCF635DE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mekmak.Gman.Jade", "Mekmak.Gman.Jade\Mekmak.Gman.Jade.csproj", "{CBD73B14-5E6B-4D3C-A356-AFFA97DEB3BC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mekmak.Gman.Jade", "Mekmak.Gman.Jade\Mekmak.Gman.Jade.csproj", "{CBD73B14-5E6B-4D3C-A356-AFFA97DEB3BC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

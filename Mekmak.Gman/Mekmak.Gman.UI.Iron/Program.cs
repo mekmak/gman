@@ -2,7 +2,13 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Google.Apis.Auth.OAuth2;
 using Google.Apis.Gmail.v1;
+using Google.Apis.PeopleService.v1;
+using Google.Apis.Services;
+using Google.Apis.Util.Store;
 using Mekmak.Gman.Cobalt;
 using Mekmak.Gman.Diamond;
 using Mekmak.Gman.Ore;
@@ -12,9 +18,10 @@ namespace Mekmak.Gman.UI.Iron
 {
     class Program
     {
-        private static GmailService _service;
         private static ITraceLogger _log;
         private static MessageProvider _messageProvider;
+        private static ContactProvider _contactProvider;
+        private static LabelProvider _labelProvider;
 
         static void Main(string[] args)
         {
@@ -28,21 +35,14 @@ namespace Mekmak.Gman.UI.Iron
 
             _log = new ConsoleTraceLogger("Gman.UI.Iron");
 
-            var factory = new GmailServiceFactory();
-            _service = factory.BuildAsync(new GmailServiceConfig
-            {
-                ApiScopes = new[]
-                {
-                    GmailService.Scope.GmailReadonly,
-                    GmailService.Scope.GmailSend
-                },
-                AppName = "Mekmak Gman",
-                CredentialsFilePath = credentialsPath,
-                TokenDirectory = tokenDir
-            }).Result;
-            
-            _messageProvider = new MessageProvider(_log.GetSubLogger("MessageProvider"), _service);
+            var gmailService = BuildGmailService(credentialsPath, tokenDir).Result;
+            var peopleService = BuildPeopleServiceAsync(credentialsPath).Result;
 
+            _contactProvider = new ContactProvider(_log.GetSubLogger("ContactProvider"), peopleService);
+            _messageProvider = new MessageProvider(_log.GetSubLogger("MessageProvider"), gmailService);
+            _labelProvider = new LabelProvider(gmailService);
+
+            string baseTraceId = TraceId.New();
             while (true)
             {
                 Console.Write("> ");
@@ -55,7 +55,7 @@ namespace Mekmak.Gman.UI.Iron
 
                 try
                 {
-                    ProcessCommand(command);
+                    ProcessCommand(TraceId.New(baseTraceId), command);
                 }
                 catch (Exception ex)
                 {
@@ -67,7 +67,42 @@ namespace Mekmak.Gman.UI.Iron
             }
         }
 
-        private static void ProcessCommand(ConsoleCommand command)
+        private static async Task<PeopleServiceService> BuildPeopleServiceAsync(string credsPath)
+        {
+            using var stream = new FileStream(credsPath, FileMode.Open, FileAccess.Read);
+
+            UserCredential credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
+                GoogleClientSecrets.FromStream(stream).Secrets,
+                new[] { PeopleServiceService.Scope.Contacts },
+                "user",
+                CancellationToken.None,
+                new FileDataStore("Mekmak.Gman.People"));
+
+            // Create the service.
+            return new PeopleServiceService(new BaseClientService.Initializer()
+            {
+                HttpClientInitializer = credential,
+                ApplicationName = "Mekmak Gman",
+            });
+        }
+
+        private static async Task<GmailService> BuildGmailService(string credsPath, string tokenDir)
+        {
+            var factory = new GmailServiceFactory();
+            return await factory.BuildAsync(new GmailServiceConfig
+            {
+                ApiScopes = new[]
+                {
+                    GmailService.Scope.GmailReadonly,
+                    GmailService.Scope.GmailSend
+                },
+                AppName = "Mekmak Gman",
+                CredentialsFilePath = credsPath,
+                TokenDirectory = tokenDir
+            });
+        }
+
+        private static void ProcessCommand(string traceId, ConsoleCommand command)
         {
             switch (command.Current)
             {
@@ -77,10 +112,41 @@ namespace Mekmak.Gman.UI.Iron
                 case "message":
                     ProcessMessageCommand(command.Advance());
                     return;
+                case "contact":
+                    ProcessContactCommand(traceId, command.Advance());
+                    return;
                 default:
                     ConsoleWriter.WriteInYellow($"Unknown command '{command}'");
                     return;
             }
+        }
+
+        private static void ProcessContactCommand(string traceId, ConsoleCommand command)
+        {
+            switch(command.Current)
+            {
+                case "search":
+                    string email = command.Advance().Current;
+                    if(string.IsNullOrWhiteSpace(email))
+                    {
+                        ConsoleWriter.WriteInYellow("Must pass email argument into contact search");
+                        return;
+                    }
+
+                    var contacts = _contactProvider.SearchByEmail(traceId, email).Result;
+                    foreach(var c in contacts)
+                    {
+                        ConsoleWriter.WriteInGreen($"\nResource name: {c.ResourceName}");
+                        foreach(var n in c.Names)
+                        {
+                            ConsoleWriter.WriteInGreen($"\tName: {n.DisplayName}");
+                        }
+                    }
+                    return;
+                default:
+                    ConsoleWriter.WriteInYellow($"Unknown contact commaind '{command}'");
+                    return;
+            }    
         }
 
         private static void ProcessLabelCommand(ConsoleCommand command)
@@ -289,8 +355,7 @@ namespace Mekmak.Gman.UI.Iron
         {
             ConsoleWriter.WriteInGreen("Fetching labels..");
 
-            var labelProvider = new LabelProvider(_service);
-            List<Label> labels = labelProvider.GetLabels();
+            List<Label> labels = _labelProvider.GetLabels();
             if (!labels.Any())
             {
                 ConsoleWriter.WriteInGreen("No labels found");
