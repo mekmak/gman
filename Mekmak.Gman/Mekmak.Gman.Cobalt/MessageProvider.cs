@@ -31,10 +31,11 @@ namespace Mekmak.Gman.Cobalt
 
         public List<Message> GetMessagesWithLabel(string traceId, params string[] labelIds)
         {
-            var request = _service.Users.Messages.List("me");
+            /*UsersResource.MessagesResource.ListRequest request = _service.Users.Messages.List("me");
             request.LabelIds = labelIds;
+            request.MaxResults = 500;*/
 
-            var messageIds = request.Execute().Messages.Select(m => m.Id).ToList();
+            List<string> messageIds = GetMessageIds(traceId, labelIds);
             var messages = new ConcurrentBag<Message>();
 
             Parallel.ForEach(messageIds, id =>
@@ -44,6 +45,28 @@ namespace Mekmak.Gman.Cobalt
             });
 
             return messages.ToList();
+        }
+
+        private List<string> GetMessageIds(string traceId, params string[] labelIds)
+        {
+            UsersResource.MessagesResource.ListRequest request = _service.Users.Messages.List("me");
+            request.LabelIds = labelIds;
+            request.MaxResults = 100;
+
+            var messageIds = new List<string>();
+            while (true)
+            {
+                ListMessagesResponse response = request.Execute();
+                messageIds.AddRange(response.Messages.Select(m => m.Id));
+                if (string.IsNullOrWhiteSpace(response.NextPageToken))
+                {
+                    break;
+                }
+
+                request.PageToken = response.NextPageToken;
+            }
+
+            return messageIds;
         }
 
         public Message GetMessage(string traceId, string messageId)

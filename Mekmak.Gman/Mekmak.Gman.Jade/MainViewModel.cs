@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using Mekmak.Gman.Jade.Models;
@@ -311,7 +312,7 @@ namespace Mekmak.Gman.Jade
         private string GetSubject(string emailBody)
         {
             string[] lines = emailBody.Split(Environment.NewLine);
-            return lines.Length < 3 ? null : lines[2].Trim();
+            return lines.Length < 2 ? null : lines[1].Trim().Substring(0, Math.Min(lines[1].Length, 250));
         }
 
         private DateTime? GetDate(string emailBody)
@@ -323,7 +324,23 @@ namespace Mekmak.Gman.Jade
             }
 
             string dateLine = lines[0];
-            return DateTime.TryParse(dateLine, out DateTime date) ? (DateTime?)date : null;
+
+            {
+                if (DateTime.TryParse(dateLine, out DateTime date))
+                {
+                    return date;
+                }
+            }
+
+            {
+                string trimmedDateLine = dateLine.Substring(0, dateLine.Length - 6);
+                if (DateTime.TryParseExact(trimmedDateLine, "ddd, d MMM yyyy H:mm:ss K", CultureInfo.InvariantCulture, DateTimeStyles.AllowWhiteSpaces, out DateTime date))
+                {
+                    return date;
+                }
+            }
+
+            return null;
         }
 
         private void RotateImage()
