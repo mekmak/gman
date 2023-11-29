@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Windows;
 using Mekmak.Gman.Ore;
 
 namespace Mekmak.Gman.Jade.Models

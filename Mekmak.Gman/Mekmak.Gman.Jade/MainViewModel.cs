@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Mekmak.Gman.Jade.Models;
 using Mekmak.Gman.Ore;
 using Exception = System.Exception;
@@ -210,7 +211,7 @@ namespace Mekmak.Gman.Jade
 
             try
             {
-                var csvLines = taggedEmails.Select(e => $"{e.Category},{e.AmountDisplay},{e.EmailDisplayDate},{e.ReceiptDisplayDate},{e.Source},{e.Gig}").ToList();
+                var csvLines = taggedEmails.Select(e => $"{e.Category},\"{e.AmountDisplay}\",{e.EmailDisplayDate},{e.ReceiptDisplayDate},{e.Source},{e.Gig}").ToList();
                 csvLines.Insert(0, "Category,Amount,EmailDate,ReceiptDate,Source,Gig");
                 var exportDir = Path.Combine(_emailDirectory, ExportDir);
                 Directory.CreateDirectory(exportDir);
@@ -278,6 +279,15 @@ namespace Mekmak.Gman.Jade
                     }
                 }
 
+                try
+                {
+                    Infer(emailModel);
+                }
+                catch
+                {
+                    // ignored
+                }
+
                 FileInfo imageFile = subDirectory.GetFiles().FirstOrDefault(f => !f.Name.EndsWith(".txt") && !f.Name.EndsWith(".json"));
                 if (imageFile != null)
                 {
@@ -307,6 +317,20 @@ namespace Mekmak.Gman.Jade
             Emails = new ObservableCollection<EmailModel>(emails);
             SelectedEmail = Emails.FirstOrDefault();
             ReportToUser($"Loaded {Emails.Count} email(s) - {dataReadSuccessCount} data file(s) processed, {dataReadProblemCount} had issues");
+        }
+
+        private static readonly Regex MtaRegex = new Regex(@"^Your \$(?<price>.*?) transaction with MTA\*NYCT PAYGO$", RegexOptions.Compiled);
+        private void Infer(EmailModel email)
+        {
+            if (MtaRegex.IsMatch(email.Subject))
+            {
+                var matches = MtaRegex.Matches(email.Subject);
+                var price = decimal.Parse(matches[0].Groups["price"].Value);
+                email.Amount = price;
+                email.Category = "Travel";
+                email.Gig = "Musician";
+                email.ReceiptDate = email.EmailDate;
+            }
         }
 
         private string GetSubject(string emailBody)
