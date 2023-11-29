@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:src="clr-namespace:Mekmak.Gman.Jade"
         mc:Ignorable="d"
         DataContext="local:MainViewModel"
         Title="MainWindow" Height="450" Width="800">
@@ -28,8 +29,8 @@
     </Window.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="1*"/>
-            <ColumnDefinition Width="4*"/>
+            <ColumnDefinition Width="2*"/>
+            <ColumnDefinition Width="2*"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -61,21 +62,21 @@
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
             <Grid Grid.Column="0" Grid.Row="0" KeyboardNavigation.TabNavigation="None">
-                <TextBox IsReadOnly="True" VerticalContentAlignment="Top"
+                <WebBrowser LoadCompleted="WebBrowser_LoadCompleted" DataContext="{Binding Path=SelectedEmail}" src:BindToWebBrowser.Html="{Binding Body}" />
+                <!--<TextBox IsReadOnly="True" VerticalContentAlignment="Top"
                          HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible" 
-                         DataContext="{Binding Path=SelectedEmail}" Text="{Binding Body}"/>
+                         DataContext="{Binding Path=SelectedEmail}" Text="{Binding Body}" />-->
             </Grid>
-            
 
             <Image KeyboardNavigation.TabNavigation="None" Grid.Column="1" Grid.Row="0" MouseRightButtonUp="EmailImage_OnMouseRightButtonUp" DataContext="{Binding Path=SelectedEmail}" Source="{Binding Uri}" RenderTransformOrigin=".5,.5">
                 <Image.RenderTransform>
                     <RotateTransform Angle="{Binding ImageRotateAngle}" />
                 </Image.RenderTransform>
-            </Image>
+            </Image>          
 
             <StackPanel Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="1" Orientation="Horizontal">
                 <StackPanel Orientation="Horizontal">
