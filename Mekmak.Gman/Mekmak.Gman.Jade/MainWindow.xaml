@@ -79,31 +79,33 @@
             </Image>          
 
             <StackPanel Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="1" Orientation="Horizontal">
+                <Button Content="Invalid" Command="{Binding InvalidEmailCommand}" TabIndex="0"/>
+                <Button Content="Duplicate" Command="{Binding DuplicateEmailCommand}" TabIndex="1"/>
                 <StackPanel Orientation="Horizontal">
                     <Label Content="Category: "/>
-                    <TextBox DataContext="{Binding Path=SelectedEmail}" Text="{Binding Category}" MinWidth="100" TabIndex="0"/>
-                </StackPanel>
-                <StackPanel Orientation="Horizontal">
-                    <Label Content="Month: "/>
-                    <TextBox DataContext="{Binding Path=SelectedEmail}" Text="{Binding ReceiptDateMonth}" MinWidth="100" TabIndex="1"/>
-                </StackPanel>
-                <StackPanel Orientation="Horizontal">
-                    <Label Content="Day: "/>
-                    <TextBox DataContext="{Binding Path=SelectedEmail}" Text="{Binding ReceiptDateDay}" MinWidth="100" TabIndex="2"/>
-                </StackPanel>
-                <StackPanel Orientation="Horizontal">
-                    <Label Content="Year: "/>
-                    <TextBox DataContext="{Binding Path=SelectedEmail}" Text="{Binding ReceiptDateYear}" MinWidth="100" TabIndex="3"/>
+                    <TextBox DataContext="{Binding Path=SelectedEmail}" Text="{Binding Category}" MinWidth="100" TabIndex="2"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal">
                     <Label Content="Amount: "/>
-                    <TextBox DataContext="{Binding Path=SelectedEmail}" Text="{Binding Amount}" MinWidth="100" TabIndex="4"/>
+                    <TextBox DataContext="{Binding Path=SelectedEmail}" Text="{Binding Amount}" MinWidth="100" TabIndex="3"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal">
                     <Label Content="Gig: "/>
-                    <TextBox DataContext="{Binding Path=SelectedEmail}" Text="{Binding Gig}" MinWidth="100" TabIndex="5"/>
+                    <TextBox DataContext="{Binding Path=SelectedEmail}" Text="{Binding Gig}" MinWidth="100" TabIndex="4"/>
                 </StackPanel>
-                <Button Content="Next" Command="{Binding NextEmailCommand}" TabIndex="6"/>
+                <Button Content="Next" Command="{Binding NextEmailCommand}" TabIndex="5"/>
+                <StackPanel Orientation="Horizontal" KeyboardNavigation.TabNavigation="None">
+                    <Label Content="Month: "/>
+                    <TextBox DataContext="{Binding Path=SelectedEmail}" Text="{Binding ReceiptDateMonth}" MinWidth="100" KeyboardNavigation.TabNavigation="None"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" KeyboardNavigation.TabNavigation="None">
+                    <Label Content="Day: "/>
+                    <TextBox DataContext="{Binding Path=SelectedEmail}" Text="{Binding ReceiptDateDay}" MinWidth="100" KeyboardNavigation.TabNavigation="None"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" KeyboardNavigation.TabNavigation="None">
+                    <Label Content="Year: "/>
+                    <TextBox DataContext="{Binding Path=SelectedEmail}" Text="{Binding ReceiptDateYear}" MinWidth="100" KeyboardNavigation.TabNavigation="None"/>
+                </StackPanel>                
             </StackPanel>
         </Grid>
         <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2">

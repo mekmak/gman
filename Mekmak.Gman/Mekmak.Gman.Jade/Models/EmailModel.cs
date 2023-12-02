@@ -190,7 +190,7 @@ namespace Mekmak.Gman.Jade.Models
 
         public bool IsTagged
         {
-            get => _amount > 0 && !string.IsNullOrWhiteSpace(Gig) && !string.IsNullOrWhiteSpace(Category);
+            get => (_amount != 0) && !string.IsNullOrWhiteSpace(Gig) && !string.IsNullOrWhiteSpace(Category);
             set { }
         }
 
