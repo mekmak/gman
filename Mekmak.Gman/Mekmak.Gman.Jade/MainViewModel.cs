@@ -20,9 +20,39 @@ namespace Mekmak.Gman.Jade
             RotateImageCommand = new Command(RotateImage);
             ExportCommand = new Command(Export);
             NextEmailCommand = new Command(NextEmail);
+            InvalidEmailCommand = new Command(InvalidEmail);
+            DuplicateEmailCommand = new Command(DuplicateEmail);
         }
 
         #region Commands
+
+        private Command _invalidEmailCommand;
+        public Command InvalidEmailCommand
+        {
+            get => _invalidEmailCommand;
+            set
+            {
+                if (_invalidEmailCommand != value)
+                {
+                    _invalidEmailCommand = value;
+                    OnPropertyChanged(nameof(InvalidEmailCommand));
+                }
+            }
+        }
+
+        private Command _duplicateEmailCommand;
+        public Command DuplicateEmailCommand
+        {
+            get => _duplicateEmailCommand;
+            set
+            {
+                if (_duplicateEmailCommand != value)
+                {
+                    _duplicateEmailCommand = value;
+                    OnPropertyChanged(nameof(DuplicateEmailCommand));
+                }
+            }
+        }
 
         private Command _nextEmailCommand;
         public Command NextEmailCommand
@@ -165,6 +195,38 @@ namespace Mekmak.Gman.Jade
             
         }
 
+        private void DuplicateEmail()
+        {
+            if (_emails == null || _emails.Count == 0 || SelectedEmail == null)
+            {
+                NextEmail();
+                return;
+            }
+
+            SelectedEmail.Amount = -1;
+            SelectedEmail.Category = "Duplicate";
+            SelectedEmail.ReceiptDate = SelectedEmail.EmailDate;
+            SelectedEmail.Gig = "Duplicate";
+
+            NextEmail();
+        }
+
+        private void InvalidEmail()
+        {
+            if (_emails == null || _emails.Count == 0 || SelectedEmail == null)
+            {
+                NextEmail();
+                return;
+            }
+
+            SelectedEmail.Amount = -1;
+            SelectedEmail.Category = "Invalid";
+            SelectedEmail.ReceiptDate = SelectedEmail.EmailDate;
+            SelectedEmail.Gig = "Invalid";
+
+            NextEmail();
+        }
+
         private void NextEmail()
         {
             if (_emails == null || _emails.Count == 0)
@@ -272,6 +334,7 @@ namespace Mekmak.Gman.Jade
                         emailModel.Body = body;
                         emailModel.Subject = GetSubject(body) ?? "Unknown";
                         emailModel.EmailDate = GetDate(body);
+                        emailModel.ReceiptDate = emailModel.EmailDate;
                     }
                     catch (Exception e)
                     {
