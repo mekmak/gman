@@ -7,7 +7,7 @@
   <ItemGroup>
     <PackageReference Include="Google.Apis.Gmail.v1" Version="1.55.0.2510" />
     <PackageReference Include="Google.Apis.PeopleService.v1" Version="1.55.0.2437" />
-    <PackageReference Include="MimeKit" Version="2.15.1" />
+    <PackageReference Include="MimeKit" Version="4.15.1" />
   </ItemGroup>
 
   <ItemGroup>
